@@ -1,0 +1,1287 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بنك إجابات بايثون - عالم بودا الرقمي</title>
+    <style>
+        :root {
+            --primary: #10b981;
+            --primary-dark: #059669;
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --code-bg: #090d16;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            line-height: 1.7;
+        }
+
+        /* شاشة كلمة السر والترحيب */
+        #auth-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease;
+        }
+
+        .auth-card {
+            background: var(--card-bg);
+            padding: 2.5rem;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .auth-card h2 {
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .auth-card p {
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+        }
+
+        .auth-card input {
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--code-bg);
+            color: white;
+            font-size: 1.2rem;
+            text-align: center;
+            margin-bottom: 1rem;
+            outline: none;
+            box-sizing: border-box;
+        }
+
+        .auth-card input:focus {
+            border-color: var(--primary);
+        }
+
+        .auth-card button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            width: 100%;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+
+        .auth-card button:hover {
+            background: var(--primary-dark);
+        }
+
+        .error-msg {
+            color: #ef4444;
+            margin-top: 0.75rem;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        /* تأثير رسالة الترحيب */
+        #welcome-effect {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.98);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9998;
+            animation: fadeIn 0.5s ease;
+        }
+
+        #welcome-effect h1 {
+            color: var(--primary);
+            font-size: 2.5rem;
+            text-align: center;
+            text-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+            animation: scaleUp 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            padding: 0 1rem;
+        }
+
+        @keyframes scaleUp {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* محتوى الموقع الأساسي */
+        #main-content {
+            display: none;
+        }
+
+        header {
+            background: linear-gradient(135deg, #065f46, var(--primary));
+            color: white;
+            text-align: center;
+            padding: 2.5rem 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+        }
+
+        header h1 {
+            margin: 0 0 0.5rem 0;
+            font-size: 2.2rem;
+        }
+
+        header p {
+            margin: 0;
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .chapter-section {
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        .chapter-title {
+            background: #0f766e;
+            color: white;
+            padding: 1rem 1.5rem;
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+
+        .answers-list {
+            padding: 1.5rem;
+        }
+
+        .answer-wrapper {
+            position: relative;
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-right: 5px solid var(--primary);
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .answer-item {
+            padding: 1rem 1.25rem;
+            font-family: 'Courier New', Courier, monospace;
+            white-space: pre-wrap;
+            direction: ltr;
+            text-align: left;
+            color: #34d399;
+            font-size: 1rem;
+            flex-grow: 1;
+            overflow-x: auto;
+        }
+
+        .answer-item.arabic {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            direction: rtl;
+            text-align: right;
+            color: var(--text);
+        }
+
+        .copy-btn {
+            background: #334155;
+            color: white;
+            border: none;
+            padding: 0.5rem 0.8rem;
+            margin: 0.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: bold;
+            transition: background 0.2s, transform 0.1s;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .copy-btn:hover {
+            background: var(--primary);
+        }
+
+        .copy-btn:active {
+            transform: scale(0.95);
+        }
+
+        .copy-btn.copied {
+            background: var(--primary);
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            border-top: 1px solid var(--border);
+            margin-top: 3rem;
+        }
+
+        .whatsapp-float {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #25d366;
+            color: white;
+            border-radius: 50px;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            z-index: 100;
+            transition: transform 0.3s, background 0.3s;
+        }
+
+        .whatsapp-float:hover {
+            background: #20ba5a;
+            transform: scale(1.05);
+        }
+
+        .whatsapp-float svg {
+            width: 24px;
+            height: 24px;
+            fill: white;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- شاشة إدخال كلمة السر -->
+    <div id="auth-screen">
+        <div class="auth-card">
+            <h2>مرحباً بك يا معلم</h2>
+            <p>يرجى إدخال كلمة المرور للمتابعة</p>
+            <input type="password" id="password-input" placeholder="أدخل كلمة السر" onkeypress="checkEnter(event)">
+            <button onclick="verifyPassword()">دخول</button>
+            <div id="error-msg" class="error-msg">كلمة المرور غير صحيحة!</div>
+        </div>
+    </div>
+
+    <!-- تأثير رسالة الترحيب -->
+    <div id="welcome-effect">
+        <h1>أهلاً بيك في عالم بودا الرقمي</h1>
+    </div>
+
+    <!-- محتوى الموقع الأساسي -->
+    <div id="main-content">
+        <header>
+            <h1>بنك إجابات بايثون - عالم بودا الرقمي</h1>
+            <p>الملخصات والإجابات الصافية لكل الفصول من 1 إلى 25</p>
+        </header>
+
+        <div class="container">
+
+            <!-- الفصل الأول -->
+            <div class="chapter-section">
+                <div class="chapter-title">الفصل الأول بايثون</div>
+                <div class="answers-list">
+                    <div class="answer-wrapper"><div class="answer-item">print("Hello")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">print("Good morning")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">print("Good evening")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">print("Good night")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">print("Let's do our best")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">#</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">#Write a comment here</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">print("Hello")
+print("My name is")
+#print("Rick")
+print("Cody")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                </div>
+            </div>
+
+            <!-- مراجعة الفصل الأول -->
+            <div class="chapter-section">
+                <div class="chapter-title">مراجعة الفصل الأول</div>
+                <div class="answers-list">
+                    <div class="answer-wrapper"><div class="answer-item">print("Hello")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">print("Good morning")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">print("programming")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">print("hello")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                </div>
+            </div>
+
+            <!-- الفصل الثاني -->
+            <div class="chapter-section">
+                <div class="chapter-title">الفصل الثاني بايثون</div>
+                <div class="answers-list">
+                    <div class="answer-wrapper"><div class="answer-item">print("Let's calculate")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">print("5+2")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">print(5+2)</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">print(1200+2800)</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">print(278+422)</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">print(3000-850)</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">print(7*6)</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">print(48/6)</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">print(200000000000*300000000000)</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">+</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">str(350*3)</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">str(200*1)</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">+str(200*2)+</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">print(type(500))
+print(type("500codycoins"))</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">print(type("100"))</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                </div>
+            </div>
+
+            <!-- مراجعة الفصل الثاني -->
+            <div class="chapter-section">
+                <div class="chapter-title">مراجعة الفصل الثاني</div>
+                <div class="answers-list">
+                    <div class="answer-wrapper"><div class="answer-item">print(50 + 100)</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">/</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">print(19 + 40)</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">print(15 / 5)</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">print("Today is the 17th. 7 days ago was the " + str(17 - 7) + "th.")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">print(7 - 2)</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">print("The answer is " + str(2 * 5) + ".")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item arabic">نوع السلسلة النصية</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">print(type("1"))</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                </div>
+            </div>
+
+            <!-- الفصل الثالث -->
+            <div class="chapter-section">
+                <div class="chapter-title">الفصل الثالث</div>
+                <div class="answers-list">
+                    <div class="answer-wrapper"><div class="answer-item">print(apples)</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">print("apples")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">grapes = 0
+grapes = grapes + 8
+grapes = grapes + 12
+print(grapes)</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">strawberries=0
+strawberries=strawberries+5
+strawberries=strawberries+8
+print(strawberries)</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">pears=4
+pears=pears+6
+pears=pears+7
+print(pears)</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                </div>
+            </div>
+
+            <!-- مراجعة الفصل الثالث -->
+            <div class="chapter-section">
+                <div class="chapter-title">مراجعة الفصل الثالث</div>
+                <div class="answers-list">
+                    <div class="answer-wrapper"><div class="answer-item">score = 0</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">print(score)</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">number = 0</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">number = 0
+number = 100</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">number = 0
+number = 10
+print(number)</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">number = 3
+number = number + 10
+print(number)</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                </div>
+            </div>
+
+            <!-- الفصل الرابع -->
+            <div class="chapter-section">
+                <div class="chapter-title">الفصل الرابع</div>
+                <div class="answers-list">
+                    <div class="answer-wrapper"><div class="answer-item">#Write the program on the line below
+print("Good evening")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">print("Cookies and juice cost " + str(120+80) + "codycoins")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">apples=2
+apples=apples+8
+print(apples)</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                </div>
+            </div>
+
+            <!-- مراجعة الفصل الرابع -->
+            <div class="chapter-section">
+                <div class="chapter-title">مراجعة الفصل الرابع</div>
+                <div class="answers-list">
+                    <div class="answer-wrapper"><div class="answer-item">print("Hello")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">print("hello")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">#I'll leave this text here.
+print("Comment out the first line")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">print(5 + 7)</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">*</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">print("The answer is " + str(3 * 4) + ".")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">number = 0</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">num = 5
+print(num)</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                </div>
+            </div>
+
+            <!-- الفصل الخامس -->
+            <div class="chapter-section">
+                <div class="chapter-title">الفصل الخامس</div>
+                <div class="answers-list">
+                    <div class="answer-wrapper"><div class="answer-item">books=80</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">if books==100:</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">print("Reading Champion Badge!")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">books=100
+if books==100:
+    print("Reading Champion Badge!")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">english=100
+if english==100:
+    print("Get a reward")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                </div>
+            </div>
+
+            <!-- مراجعة الفصل الخامس -->
+            <div class="chapter-section">
+                <div class="chapter-title">مراجعة الفصل الخامس</div>
+                <div class="answers-list">
+                    <div class="answer-wrapper"><div class="answer-item">num = 5
+print(num)</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">if conditional expression:
+    process</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">num == 50</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">num = 100
+if num == 100:
+    print("Correct")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">False</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                </div>
+            </div>
+
+            <!-- الفصل السادس -->
+            <div class="chapter-section">
+                <div class="chapter-title">الفصل السادس</div>
+                <div class="answers-list">
+                    <div class="answer-wrapper"><div class="answer-item">books=100
+if books==100:
+    print("Reading Champion Badge!")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">else:</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">print("Let's try a little more!")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">print("No reward")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">if cookie == 0:</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">lucky = 777
+if lucky ==777:
+ print("Lucky!")
+else:
+    print("Try again")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">chem = 28
+if chem <= 40:
+    print("Practice worksheet")
+else:
+    print("No worksheet")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">english>=65:</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">height>132:</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">height<90:</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">age = 15
+if age <= 16:
+    print("Entry not allowed")
+else:
+    print("Entry allowed")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">age=15
+if age >=65:
+  print("Slide closed")
+else:
+    print("Slide OK")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">weather = "Cloudy"
+
+if weather != "Rainy":
+    print("Play soccer")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">myScore = 90
+
+if myScore!=100:
+    print("Aim for a perfect score!")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                </div>
+            </div>
+
+            <!-- مراجعة السادس -->
+            <div class="chapter-section">
+                <div class="chapter-title">مراجعة السادس</div>
+                <div class="answers-list">
+                    <div class="answer-wrapper"><div class="answer-item">if conditional expression:
+    A
+else:
+    B</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">num = 5
+if num == 10:
+    print("Win")
+else:
+    print("No prize")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">num <= 80</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">num > 30</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">score = 80
+if score >= 60:
+    print("Pass")
+else:
+    print("Fail")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                </div>
+            </div>
+
+            <!-- الفصل السابع -->
+            <div class="chapter-section">
+                <div class="chapter-title">الفصل السابع</div>
+                <div class="answers-list">
+                    <div class="answer-wrapper"><div class="answer-item">ticket = 2
+if ticket == 1:
+    print("Free drink")
+elif ticket == 2:
+    print("Includes popcorn")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">ticket = 3
+if ticket == 1:
+    print("Free drink")
+elif ticket == 2:
+    print("Includes popcorn")
+elif ticket ==3:
+    print("Mini snack set")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">ticket = 4
+if ticket == 1:
+    print("Free drink")
+elif ticket == 2:
+    print("Includes popcorn")
+elif ticket == 3:
+    print("Mini snack set")
+elif ticket ==4:
+    print("Goods voucher")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">ticket = 10
+if ticket == 1:
+    print("Free drink")
+elif ticket == 2:
+    print("Includes popcorn")
+elif ticket == 3:
+    print("Mini snack set")
+elif ticket == 4:
+    print("Goods voucher")
+else:
+    print("No prize")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">people = 3
+if people == 2:
+    print("10% off")
+elif people >= 3:
+    print("20% off")
+else:
+    print("Regular price")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">print("It's almost gone")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                </div>
+            </div>
+
+            <!-- مراجعة السابع -->
+            <div class="chapter-section">
+                <div class="chapter-title">مراجعة السابع</div>
+                <div class="answers-list">
+                    <div class="answer-wrapper"><div class="answer-item">if condition:
+    A
+elif conditions:
+    B</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">elif num == 2:
+    print("It's 2")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">elif score >= 80:
+    print("Pass")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item arabic">So close</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">egg = 5
+if egg == 0:
+    print("Out of stock")
+elif egg <= 3:
+    print("Low stock")
+else:
+    print("In stock")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                </div>
+            </div>
+
+            <!-- الفصل الثامن -->
+            <div class="chapter-section">
+                <div class="chapter-title">الفصل الثامن</div>
+                <div class="answers-list">
+                    <div class="answer-wrapper"><div class="answer-item">books = 100
+if books == 100:
+    print("Reading Champion Badge!")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">books = 80
+if books == 100:
+    print("Reading Champion Badge!")
+else:
+        print("Let's try a little harder!")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">if age <= 16:</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">print("Entry not allowed")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">else:</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">print("Entry allowed")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">english = 77
+if english == 100:
+    print("Perfect score")
+elif english >= 75:
+    print("Pass")
+else: 
+    print("Make-up exam")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                </div>
+            </div>
+
+            <!-- الفصل التاسع -->
+            <div class="chapter-section">
+                <div class="chapter-title">الفصل التاسع</div>
+                <div class="answers-list">
+                    <div class="answer-wrapper"><div class="answer-item">if people >= 2 or points >= 3000:
+    print("10% off")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">people = 2
+points = 3500
+if people >= 2 and points >= 3000:
+    print("Get an eco bag")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">age = 15
+if age <= 12 or age >= 65:
+    print("30% off")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                </div>
+            </div>
+
+            <!-- الفصل العاشر -->
+            <div class="chapter-section">
+                <div class="chapter-title">الفصل العاشر</div>
+                <div class="answers-list">
+                    <div class="answer-wrapper"><div class="answer-item">for count in range(10):
+    print("deer")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item">for i in range(1, 3):
+    print("She sells seashells")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                </div>
+            </div>
+
+            <!-- الفصل الحادي عشر -->
+            <div class="chapter-section">
+                <div class="chapter-title">الفصل الحادي عشر</div>
+                <div class="answers-list">
+                    <div class="answer-wrapper"><div class="answer-item">import math
+import random
+
+print(round(10.6))
+print(max(10, 25, 18))
+print(min(5, 10, 50))
+print(math.floor(10.5))
+print(random.random())</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                </div>
+            </div>
+
+            <!-- الفصل الثاني عشر -->
+            <div class="chapter-section">
+                <div class="chapter-title">الفصل الثاني عشر</div>
+                <div class="answers-list">
+                    <div class="answer-wrapper"><div class="answer-item">def split3(total):
+    result = total / 3
+    return result
+print(split3(5000))</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                </div>
+            </div>
+
+            <!-- الفصل الثالث عشر -->
+            <div class="chapter-section">
+                <div class="chapter-title">الفصل الثالث عشر</div>
+                <div class="answers-list">
+                    <div class="answer-wrapper"><div class="answer-item">temp_list = [35, 34, 26, 29, 31, 33, 35]
+print(temp_list[2])
+print(len(temp_list))</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                </div>
+            </div>
+
+            <!-- الفصل الرابع عشر -->
+            <div class="chapter-section">
+                <div class="chapter-title">الفصل الرابع عشر</div>
+                <div class="answers-list">
+                    <div class="answer-wrapper"><div class="answer-item">import array
+warn_array = array.array('i', [2, 2, 1, 1, 2, 1, 2])
+print(warn_array[0])</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                </div>
+            </div>
+
+            <!-- الفصل الخامس عشر -->
+            <div class="chapter-section">
+                <div class="chapter-title">الفصل الخامس عشر</div>
+                <div class="answers-list">
+                    <div class="answer-wrapper"><div class="answer-item">score = 85
+if score == 100:
+    print("Won the Golden Frying Pan")
+elif score >= 85:
+    print("Dessert Party")
+else:
+    print("Dishwashing Duty")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                </div>
+            </div>
+
+            <!-- الفصل السادس عشر -->
+            <div class="chapter-section">
+                <div class="chapter-title">الفصل السادس عشر</div>
+                <div class="answers-list">
+                    <div class="answer-wrapper"><div class="answer-item">def sum(stage1_time, stage2_time, stage3_time):
+    time = stage1_time + stage2_time + stage3_time
+    return time
+
+teamA = sum(37.5, 62.5, 56.5)
+print(teamA)</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                </div>
+            </div>
+
+            <!-- الفصل السابع عشر -->
+            <div class="chapter-section">
+                <div class="chapter-title">الفصل السابع عشر</div>
+                <div class="answers-list">
+                    <div class="answer-wrapper"><div class="answer-item">record_list = ["absent", "present", "present", "present", "absent"]
+count = 0
+for day in record_list:
+    if day == "present":
+        count = count + 1
+print(count)</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                </div>
+            </div>
+
+            <!-- الفصل الثامن عشر -->
+            <div class="chapter-section">
+                <div class="chapter-title">الفصل الثامن عشر</div>
+                <div class="answers-list">
+                    <div class="answer-wrapper"><div class="answer-item">print(type(is_sunny))
+stamp_count >= 8 and help_count >= 4
+result = True
+result = False
+result and quiz_score >= 75
+print(type(is_sunny))</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item arabic">مراجعة 18: &lt;class 'bool'&gt; / ON / STR / B / On</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                </div>
+            </div>
+
+            <!-- الفصل التاسع عشر -->
+            <div class="chapter-section">
+                <div class="chapter-title">الفصل التاسع عشر</div>
+                <div class="answers-list">
+                    <div class="answer-wrapper"><div class="answer-item">import math
+print(math.floor(87.5 / 12.3))
+
+import math
+print(math.floor(7.6))
+print(round(7.6))
+
+import math
+print(math.floor(64.8 / 9.5))
+
+import random
+print(random.random())
+print(random.random() * 10)
+
+import math
+print(math.floor(random.random() * 10))
+
+import math
+print(math.floor(4.7))
+
+import random
+if random.random() >= 0.7:
+    print("Grand prize!")
+else:
+    print("Consolation prize")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item arabic">مراجعة 19: 5 / 6 / رقم من 0 إلى أقل من 1</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                </div>
+            </div>
+
+            <!-- الفصل العشرون -->
+            <div class="chapter-section">
+                <div class="chapter-title">الفصل العشرون</div>
+                <div class="answers-list">
+                    <div class="answer-wrapper"><div class="answer-item">if is_ready:
+print(type(is_ready))
+result = True
+result = False
+import math
+print(math.floor(64.8 / 9.5))
+math.floor(random.random() * 10)</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item arabic">مراجعة 20: on / str / &lt;class 'bool'&gt;</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                </div>
+            </div>
+
+            <!-- الفصل الحادي والعشرون -->
+            <div class="chapter-section">
+                <div class="chapter-title">الفصل الحادي والعشرون</div>
+                <div class="answers-list">
+                    <div class="answer-wrapper"><div class="answer-item">score = 100
+if score == 100:
+    print("Won the Golden Frying Pan")
+
+score = 85
+if score == 100:
+    print("Won the Golden Frying Pan")
+elif score >= 85:
+    print("Dessert Party")
+else:
+    print("Dishwashing Duty")
+
+temperature = 180
+cook_time = 12
+if temperature >= 170:
+    print("Heating temperature OK")
+if cook_time >= 12:
+    print("Cooking successful")
+
+sauce_temp = 98
+thickness = 2
+if sauce_temp >= 95:
+    print("Sauce is ready")
+if thickness >= 3:
+    print("Thickness is enough")
+
+for i in range(7):
+    print("Yay")
+
+for i in range(5):
+    print("vocal warm-up")
+    if i == 2:
+        print("tongue twister practice")
+
+for i in range(5):
+    print("sandwich")
+    if i == 1:
+        print("water bottle")
+
+for i in range(5):
+    print("cookie")
+    if i == 3:
+        print("chocolate")
+
+point = 0
+point += 3
+print(point)
+
+num = 0
+num += 5
+print(num)
+
+def divide6(total):
+    per = total / 6
+    return per
+
+def split5(total):
+    per = total / 5
+    return per
+print(split5(7500))
+
+def goodEvening():
+    greeting = "Good evening!"
+    return greeting
+print(goodEvening())
+
+def sum(num1, num2):
+    result = num1 + num2
+    return result
+print(sum(50, 100))
+
+score = 82
+if score == 100:
+    print("Perfect score")
+elif score >= 75:
+    print("Pass")
+else:
+    print("Retake exam")
+
+score = 90
+rank = 1
+if score >= 85:
+    print("Certification passed")
+if rank == 1:
+    print("Trophy earned")
+
+for i in range(3):
+    print("Stretch")
+    if i == 1:
+        print("Running")
+
+def goodMorning():
+    greeting = "Good morning"
+    return greeting
+print(goodMorning())
+
+def calc(num1, num2):
+    result = num1 * num2
+    return result
+print(calc(55, 75))
+
+A = 5
+B = 10
+if A > B:
+    print("A is bigger")
+elif A < B:
+    print("B is bigger")
+
+math_score = 100
+english = 100
+if math_score == 100:
+    print("Math is 100 points")
+if english == 100:
+    print("Math and English are 100 points")
+
+for i in range(7):
+    print("Good morning")
+
+i += 5
+
+def divide3(num):
+    result = num / 3
+    return result
+print(divide3(12345))
+
+def mul(num1, num2):
+    result = num1 * num2
+    return result
+print(mul(9, 7))</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item arabic">مراجعة 21: نتج خطأ / 00010</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                </div>
+            </div>
+
+            <!-- الفصل الثاني والعشرون -->
+            <div class="chapter-section">
+                <div class="chapter-title">الفصل الثاني والعشرون</div>
+                <div class="answers-list">
+                    <div class="answer-wrapper"><div class="answer-item">num = 1
+for i in range(4):
+    num = num * 3
+print(num)
+
+num = 1
+for i in range(3):
+    num = num * 5
+print(num)
+
+num = 1
+for i in range(2, 7):
+    num = num * i
+print(num)
+
+num = 1
+for i in range(2, 10):
+    num = num * i
+print(num)
+
+body_temp_list = [36.1, 36.4, 36.6, 36.5, 36.7]
+print(body_temp_list[2])
+print(body_temp_list[3])
+
+body_temp_list = [36.1, 36.4, 36.6, 36.5, 36.7, 36.0, 36.2]
+total = 0
+for i in range(7):
+    total = total + body_temp_list[i]
+print(total / 7)
+
+body_temp_list = [36.1, 36.4, 36.6, 36.5, 36.7, 36.0, 36.2, 36.8, 36.6, 36.5, 36.9, 36.4, 36.7, 37.0]
+print(len(body_temp_list))
+
+body_temp_list = [36.1, 36.4, 36.6, 36.5, 36.7, 36.0, 36.2, 36.8, 37.1, 36.5, 36.9, 36.4, 36.7, 37.2]
+for i in range(len(body_temp_list)):
+    if body_temp_list[i] >= 37.0:
+        print("Caution!")
+
+for i in range(len(body_temp_list)):
+    if body_temp_list[i] >= 37.5:
+        print("Take a rest!")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item arabic">مراجعة 22: total / len(body_temp_list)</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                </div>
+            </div>
+
+            <!-- الفصل الثالث والعشرون -->
+            <div class="chapter-section">
+                <div class="chapter-title">الفصل الثالث والعشرون</div>
+                <div class="answers-list">
+                    <div class="answer-wrapper"><div class="answer-item">low_temp_list = [1, 3, 2, -1, 0, 2, 1]
+print(low_temp_list[4])
+
+for i in range(7):
+    print(low_temp_list[i])
+
+past_temp_list = [7, 10, 12, 9, 11, 8, 15]
+for temp in past_temp_list:
+    print(temp)
+
+num_list = [4, 8, 12, 16]
+for num in num_list:
+    print(num)
+
+fruit_list = ["lime", "berry", "mango"]
+for fruit in fruit_list:
+    print(fruit)
+
+point_list = [2, 5, 8, 11]
+for point in point_list:
+    print(point)
+
+word_list = ["Good morning", "Good night", "Hello"]
+for word in word_list:
+    print(word)</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item arabic">مراجعة 23: 14 / 8 / 11 / 14 / 3 / 4 / 5</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                </div>
+            </div>
+
+            <!-- الفصل الرابع والعشرون -->
+            <div class="chapter-section">
+                <div class="chapter-title">الفصل الرابع والعشرون</div>
+                <div class="answers-list">
+                    <div class="answer-wrapper"><div class="answer-item">score = 100
+if score == 100:
+    print("Got a Gold Badge")
+
+score = 88
+if score == 100:
+    print("Got a Gold Badge")
+elif score >= 85:
+    print("Reward: Parfait")
+
+score = 65
+if score == 100:
+    print("Got a Gold Badge")
+elif score >= 85:
+    print("Reward: Parfait")
+else:
+    print("Review weak topics")
+
+bug = 45
+rare_count = 0
+if bug >= 45:
+    print("Got a Rare Beetle!")
+    rare_count = rare_count + 1
+print("Rare Beetle Counter:" + str(rare_count))
+
+bug = 95
+super_rare_count = 0
+if bug >= 90:
+    print("Super Rare Beetle Get!")
+    super_rare_count = super_rare_count + 1
+print("Super Rare Beetle Counter:" + str(super_rare_count))
+
+weather = "sunny"
+if weather == "sunny":
+    print("Stargazing on the hilltop")
+else:
+    print("Planetarium DVD at home")
+
+weather = "sunny"
+if weather == "sunny":
+    print("Let's go on the field trip")
+else:
+    print("Field trip canceled")
+
+weather = "sunny"
+team = "Red Team"
+if weather == "sunny":
+    if team == "Red Team":
+        print("Destination: the farm")
+    else:
+        print("Destination: the science museum")
+else:
+    print("Field trip canceled")
+
+weather = "sunny"
+team = "Green Team"
+if weather == "sunny":
+    if team == "Red Team":
+        print("Destination: the farm")
+    elif team == "Blue Team":
+        print("Destination: the science museum")
+    else:
+        print("Destination: the candy factory")
+else:
+    print("Field trip canceled")
+
+cold_temp_list = [6, 8, 10, 9, 11, 7, 13]
+for temp in cold_temp_list:
+    print(temp)
+
+food_list = ["tomato", "carrot", "onion"]
+for food in food_list:
+    print(food)
+
+weather = "sunny"
+shop = "open"
+if weather == "sunny":
+    if shop == "open":
+        print("Buy a star chart and go stargazing")
+    else:
+        print("Watch a planetarium DVD at home")
+
+weather = "sunny"
+team = "Team Blue"
+if weather == "sunny":
+    if team == "Team Red":
+        print("Destination is the farm")
+    elif team == "Team Blue":
+        print("Destination is the science museum")
+    else:
+        print("Destination is the sweets factory")
+else:
+    print("Field trip cancelled")
+
+weather = "rainy"
+time = "morning"
+if weather == "rainy":
+    if time == "morning":
+        print("Let's go to the movie theater")
+    elif time == "noon":
+        print("Let's go to the library")
+    else:
+        print("Let's stay home")
+else:
+    print("Let's go for a walk")</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item arabic">مراجعة 24: 8 / 11 / 14 / 100 / الوجهة مدينة ملاهي</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                </div>
+            </div>
+
+            <!-- الفصل الخامس والعشرون -->
+            <div class="chapter-section">
+                <div class="chapter-title">الفصل الخامس والعشرون</div>
+                <div class="answers-list">
+                    <div class="answer-wrapper"><div class="answer-item">def sum(stage1_time, stage2_time):
+    result = stage1_time + stage2_time
+    return result
+print(sum(37.5, 62.5))
+
+def sum(stage1_time, stage2_time, stage3_time):
+    time = stage1_time + stage2_time + stage3_time
+    return time
+
+teamA = sum(37.5, 62.5, 56.5)
+print(teamA)
+teamB = sum(44, 57, 64)
+print(teamB)
+teamC = sum(42, 63.5, 59)
+print(teamC)
+
+print(str(min(teamA, teamB, teamC)))
+
+record_list = ["absent", "present", "present", "present", "absent", "present", "absent", "present", "present", "present", "absent", "present", "present", "absent"]
+count = 0
+for day in record_list:
+    if day == "present":
+        count = count + 1
+print(count)
+
+ticket_type = "dessert"
+if ticket_type == "main dish":
+    print("Check the type of ticket")
+else:
+    print("Use the cake ticket")
+
+ticket_type = "main dish"
+main_ticket = "fish and chips ticket"
+if ticket_type == "main dish":
+    if main_ticket == "fish and chips ticket":
+        print("Exchange it with Cody")
+    else:
+        print("Use the steak ticket")
+else:
+    print("Use the cake ticket")
+
+def calculation3(a, b, c):
+    result = a * b * c
+    return result
+num1 = calculation3(5, 10, 15)
+print(num1)
+num2 = calculation3(4, 4, 4)
+print(num2)
+
+score_list = [70, 80, 66, 88, 92]
+for score in score_list:
+    if score >= 80:
+        print(score)</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                    <div class="answer-wrapper"><div class="answer-item arabic"># كان عمرك 12 سنة أو أكثر وكان طولك 140 سم أو أكثر يمكنك الركوب بمفردك</div><button class="copy-btn" onclick="copyText(this)">نسخ</button></div>
+                </div>
+            </div>
+
+        </div>
+
+        <footer>
+            جميع الحقوق محفوظة &copy; عالم بودا الرقمي 2026
+        </footer>
+    </div>
+
+    <!-- زر الواتساب العائم -->
+    <a href="https://wa.me/" target="_blank" class="whatsapp-float">
+        <svg viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.124-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+        تواصل معنا
+    </a>
+
+    <!-- سكربت الجافاسكريبت للتحقق والنسخ -->
+    <script>
+        const CORRECT_PASSWORD = "1234";
+
+        function verifyPassword() {
+            const inputVal = document.getElementById("password-input").value;
+            const errorMsg = document.getElementById("error-msg");
+
+            if (inputVal === CORRECT_PASSWORD) {
+                document.getElementById("auth-screen").style.opacity = "0";
+                setTimeout(() => {
+                    document.getElementById("auth-screen").style.display = "none";
+                    
+                    const welcomeEffect = document.getElementById("welcome-effect");
+                    welcomeEffect.style.display = "flex";
+
+                    setTimeout(() => {
+                        welcomeEffect.style.display = "none";
+                        document.getElementById("main-content").style.display = "block";
+                    }, 2000);
+
+                }, 500);
+            } else {
+                errorMsg.style.display = "block";
+            }
+        }
+
+        function checkEnter(event) {
+            if (event.key === "Enter") {
+                verifyPassword();
+            }
+        }
+
+        function copyText(button) {
+            const wrapper = button.parentElement;
+            const item = wrapper.querySelector('.answer-item');
+            const textToCopy = item.innerText;
+
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                const originalText = button.innerText;
+                button.innerText = "تم النسخ!";
+                button.classList.add("copied");
+
+                setTimeout(() => {
+                    button.innerText = originalText;
+                    button.classList.remove("copied");
+                }, 1500);
+            }).catch(err => {
+                console.error('فشل النسخ: ', err);
+            });
+        }
+    </script>
+</body>
+</html>
